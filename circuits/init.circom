@@ -51,21 +51,21 @@ template Init (n, maxBombs) {
     lessThanMax.out === 1;
 
     var bombCount = 0;
-    var gridBits = 0;
     for (var i = 0; i < n; i++) {
         grid[i] * (grid[i] - 1) === 0;
 
         bombCount += grid[i];
-        gridBits += (1 << i) * grid[i];
     }
     bombCount === bombs;
 
-    component mimc = MiMCSponge(2, 220, 1);
-    mimc.ins[0] <== gridBits;
-    mimc.ins[1] <== salt;
+    component mimc = MiMCSponge(n + 1, 220, 1);
+    for (var i = 0; i < n; i++) {
+        mimc.ins[i] <== grid[i];
+    }
+    mimc.ins[n] <== salt;
     mimc.k <== 0;
 
     id <== mimc.outs[0];
 }
 
-component main { public [ bombs ] } = Init(480, 99);
+component main { public [ width, height, bombs ] } = Init(480, 99);
