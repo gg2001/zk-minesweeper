@@ -12,6 +12,7 @@ template Init (n, maxBombs) {
 
     signal output id;
 
+    // Width checks
     component widthGreaterThanOne = GreaterThan(8);
     widthGreaterThanOne.in[0] <== width;
     widthGreaterThanOne.in[1] <== 1;
@@ -22,6 +23,7 @@ template Init (n, maxBombs) {
     widthLessThanN.in[1] <== n;
     widthLessThanN.out === 1;
 
+    // Height checks
     component heightGreaterThanOne = GreaterThan(8);
     heightGreaterThanOne.in[0] <== height;
     heightGreaterThanOne.in[1] <== 1;
@@ -32,6 +34,7 @@ template Init (n, maxBombs) {
     heightLessThanN.in[1] <== n;
     heightLessThanN.out === 1;
 
+    // Grid size checks
     signal squares;
     squares <== width * height;
 
@@ -40,6 +43,7 @@ template Init (n, maxBombs) {
     lessThanN.in[1] <== n;
     lessThanN.out === 1;
 
+    // Bomb count checks
     component bombsGreaterThanZero = GreaterThan(8);
     bombsGreaterThanZero.in[0] <== bombs;
     bombsGreaterThanZero.in[1] <== 0;
@@ -58,6 +62,10 @@ template Init (n, maxBombs) {
     }
     bombCount === bombs;
 
+    // Safe click spot in the grid
+    grid[0] === 0;
+
+    // Hash to generate ID
     component mimc = MiMCSponge(n + 1, 220, 1);
     for (var i = 0; i < n; i++) {
         mimc.ins[i] <== grid[i];
