@@ -1,7 +1,7 @@
-pragma circom 2.1.6;
+pragma circom 2.2.0;
 
-include "../node_modules/circomlib/circuits/mimcsponge.circom";
 include "../node_modules/circomlib/circuits/comparators.circom";
+include "./minesweeper.circom";
 
 template Init (n, maxBombs) {
     signal input grid[n];
@@ -66,14 +66,12 @@ template Init (n, maxBombs) {
     grid[0] === 0;
 
     // Hash to generate ID
-    component mimc = MiMCSponge(n + 1, 220, 1);
+    component hash = Hash(n);
     for (var i = 0; i < n; i++) {
-        mimc.ins[i] <== grid[i];
+        hash.grid[i] <== grid[i];
     }
-    mimc.ins[n] <== salt;
-    mimc.k <== 0;
-
-    id <== mimc.outs[0];
+    hash.salt <== salt;
+    id <== hash.out;
 }
 
 component main { public [ width, height, bombs ] } = Init(480, 99);
