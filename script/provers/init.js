@@ -7,7 +7,7 @@ async function main() {
 	const rawInput = process.argv[2];
 	const decodedInput = decodeAbiParameters(
 		[
-			{ type: "uint256[10][8]" },
+			{ type: "uint256[][]" },
 			{ type: "uint256" },
 			{ type: "uint256" },
 			{ type: "uint256" },

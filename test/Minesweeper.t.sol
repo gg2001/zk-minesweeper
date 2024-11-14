@@ -6,6 +6,14 @@ import {Minesweeper} from "../contracts/Minesweeper.sol";
 import {InitVerifier} from "../contracts/verifiers/InitVerifier.sol";
 
 contract MinesweeperTest is Test {
+    struct Grid {
+        uint256[][] cells;
+        uint256 width;
+        uint256 height;
+        uint256 bombs;
+        uint256 salt;
+    }
+
     Minesweeper public minesweeper;
 
     function setUp() public {
@@ -13,30 +21,34 @@ contract MinesweeperTest is Test {
         minesweeper = new Minesweeper(address(initVerifier));
     }
 
-    function mockGrid() public pure returns (uint256[10][8] memory grid, uint256 salt) {
-        grid[0][1] = 1;
-        grid[0][2] = 1;
-        grid[0][7] = 1;
-        grid[0][9] = 1;
-        grid[1][1] = 1;
-        grid[1][6] = 1;
-        grid[2][1] = 1;
-        grid[2][8] = 1;
-        grid[3][5] = 1;
-        grid[3][6] = 1;
+    function mockGrid() public pure returns (Grid memory grid) {
+        grid.cells = new uint256[][](8);
+        for (uint256 i = 0; i < 8; i++) {
+            grid.cells[i] = new uint256[](10);
+        }
 
-        salt = 1;
+        grid.cells[0][1] = 1;
+        grid.cells[0][2] = 1;
+        grid.cells[0][7] = 1;
+        grid.cells[0][9] = 1;
+        grid.cells[1][1] = 1;
+        grid.cells[1][6] = 1;
+        grid.cells[2][1] = 1;
+        grid.cells[2][8] = 1;
+        grid.cells[3][5] = 1;
+        grid.cells[3][6] = 1;
+
+        grid.width = 10;
+        grid.height = 8;
+        grid.bombs = 10;
+        grid.salt = 1;
     }
 
-    function proveInit(uint256[10][8] memory grid, uint256 salt)
+    function proveInit(Grid memory grid)
         public
         returns (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC, uint256[4] memory pubSignals)
     {
-        uint256 width = 10;
-        uint256 height = 8;
-        uint256 bombs = 10;
-
-        bytes memory input = abi.encode(grid, width, height, bombs, salt);
+        bytes memory input = abi.encode(grid.cells, grid.width, grid.height, grid.bombs, grid.salt);
 
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
@@ -49,10 +61,10 @@ contract MinesweeperTest is Test {
     }
 
     function test_Init() public {
-        (uint256[10][8] memory grid, uint256 salt) = mockGrid();
+        Grid memory grid = mockGrid();
 
         (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC, uint256[4] memory pubSignals) =
-            proveInit(grid, salt);
+            proveInit(grid);
 
         minesweeper.init(pA, pB, pC, pubSignals);
     }
