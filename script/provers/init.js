@@ -31,7 +31,7 @@ async function main() {
 	);
 
 	const pA = proof.pi_a.slice(0, -1).map((signal) => BigInt(signal));
-	// Flip the order of the inner signals in pB
+	// Flip order of the inner signals in pB
 	const pB = proof.pi_b
 		.slice(0, -1)
 		.map((signal) => signal.reverse().map((s) => BigInt(s)));
