@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require("path");
 const snarkjs = require("snarkjs");
-const { decodeAbiParameters } = require("viem");
+const { encodeAbiParameters, decodeAbiParameters } = require("viem");
 
 async function main() {
   const rawInput = process.argv[2];
@@ -24,13 +24,29 @@ async function main() {
 
   const input = { grid, width, height, bombs, salt };
 
-  const { proof } = await snarkjs.groth16.fullProve(
+  const { proof, publicSignals } = await snarkjs.groth16.fullProve(
     input,
     path.join(__dirname, "../../artifacts/circom/init.wasm"),
     path.join(__dirname, "../../artifacts/circom/init.zkey")
   );
 
-  process.stdout.write(JSON.stringify(proof));
+  const pA = proof.pi_a.slice(0, -1).map((signal) => BigInt(signal));
+  const pB = proof.pi_b
+    .slice(0, -1)
+    .map((signal) => signal.map((s) => BigInt(s)));
+  const pC = proof.pi_c.slice(0, -1).map((signal) => BigInt(signal));
+  const pubSignals = publicSignals.map((signal) => BigInt(signal));
+
+  const output = encodeAbiParameters(
+    [
+      { type: "uint256[2]" },
+      { type: "uint256[2][2]" },
+      { type: "uint256[2]" },
+      { type: "uint256[4]" },
+    ],
+    [pA, pB, pC, pubSignals]
+  );
+  process.stdout.write(output);
 }
 
 main()
