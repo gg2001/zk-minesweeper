@@ -10,7 +10,7 @@ BEACON := $(DEFAULT_BEACON)
 
 
 .PHONY: all
-all: ptau circuits verifiers format
+all: ptau circuits verifiers zkeys format test
 
 
 $(ARTIFACTS_DIR):
@@ -37,6 +37,11 @@ format:
 	@echo "Formatting..."
 	@pnpm format
 	@forge fmt
+
+.PHONY: test
+test:
+	@echo "Testing..."
+	@forge test
 
 .PHONY: circuits
 circuits: $(ARTIFACTS_DIR)
@@ -88,6 +93,14 @@ verifiers-prod:
 	@echo "Generating random beacon..."
 	@$(eval RANDOM_BEACON := $(shell node script/beacon.js))
 	@$(MAKE) verifiers BEACON=$(RANDOM_BEACON) PROD=true
+
+.PHONY: zkeys
+zkeys:
+	@echo "Copying zkeys and wasm to public..."
+	@for circuit in $(CIRCUITS); do \
+		cp $(ARTIFACTS_DIR)/$$circuit.wasm public/ && \
+		cp $(ARTIFACTS_DIR)/$$circuit.zkey public/; \
+	done
 
 .PHONY: clean-circom
 clean-circom:
