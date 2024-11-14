@@ -5,6 +5,8 @@ PTAU_FILE := $(ARTIFACTS_DIR)/pot15_final.ptau
 
 CIRCUITS := init
 
+BEACON := 0000000000000000000000000000000000000000000000000000000000000000
+
 
 .PHONY: all
 all: ptau circuits
@@ -31,4 +33,15 @@ circuits: $(ARTIFACTS_DIR)
 		mv $(ARTIFACTS_DIR)/$${circuit}_js/$${circuit}.wasm $(ARTIFACTS_DIR)/ && \
 		mv $(ARTIFACTS_DIR)/$${circuit}_js/$${circuit}.wat $(ARTIFACTS_DIR)/ && \
 		rm -rf $(ARTIFACTS_DIR)/$${circuit}_js; \
+	done
+
+.PHONY: verifiers
+verifiers: circuits
+	@for circuit in $(CIRCUITS); do \
+		echo "Generating verifier for $$circuit..."; \
+		snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-temp.zkey; \
+		snarkjs zkey beacon $(ARTIFACTS_DIR)/$${circuit}-temp.zkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(BEACON) 10 -n="Final Beacon phase2"; \
+		rm -rf $(ARTIFACTS_DIR)/$${circuit}-temp.zkey; \
+		snarkjs zkey export verificationkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$${circuit}.vkey.json; \
+		snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey contracts/verifiers/$${circuit}Verifier.sol; \
 	done
