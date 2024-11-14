@@ -43,5 +43,7 @@ verifiers: circuits
 		snarkjs zkey beacon $(ARTIFACTS_DIR)/$${circuit}-temp.zkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(BEACON) 10 -n="Final Beacon phase2"; \
 		rm -rf $(ARTIFACTS_DIR)/$${circuit}-temp.zkey; \
 		snarkjs zkey export verificationkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$${circuit}.vkey.json; \
-		snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey contracts/verifiers/$${circuit}Verifier.sol; \
+		circuit_cap=$$(echo "$$circuit" | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}'); \
+		snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey contracts/verifiers/$${circuit_cap}Verifier.sol; \
+		sed -i '' "s/contract Groth16Verifier/contract $${circuit_cap}Verifier/" contracts/verifiers/$${circuit_cap}Verifier.sol; \
 	done
