@@ -58,7 +58,15 @@ circuits: $(ARTIFACTS_DIR)
 verifiers: circuits
 	@for circuit in $(CIRCUITS); do \
 		echo "Generating verifier for $$circuit...$$( [ "$(BEACON)" = "$(DEFAULT_BEACON)" ] && echo " (BEACON=$(BEACON))" || echo " (BEACON=RANDOM)" )"; \
-		pnpm snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey; \
+		pnpm snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-0000.zkey; \
+		if [ "$(PROD)" = "true" ]; then \
+			echo "Generating contributions for $$circuit..."; \
+			pnpm snarkjs zkey contribute $(ARTIFACTS_DIR)/$${circuit}-0000.zkey $(ARTIFACTS_DIR)/$${circuit}-0001.zkey --name="1st Contribution" -v; \
+			pnpm snarkjs zkey contribute $(ARTIFACTS_DIR)/$${circuit}-0001.zkey $(ARTIFACTS_DIR)/$${circuit}-0002.zkey --name="2nd Contribution" -v; \
+			pnpm snarkjs zkey contribute $(ARTIFACTS_DIR)/$${circuit}-0002.zkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey --name="3rd Contribution" -v; \
+		else \
+			cp $(ARTIFACTS_DIR)/$${circuit}-0000.zkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey; \
+		fi; \
 		pnpm snarkjs zkey beacon $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(BEACON) 10 -n="Final Beacon phase2"; \
 		pnpm snarkjs zkey export verificationkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(ARTIFACTS_DIR)/$${circuit}.vkey.json; \
 		circuit_cap=$$(echo "$$circuit" | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}'); \
@@ -76,7 +84,7 @@ verifiers: circuits
 verifiers-prod: circuits
 	@echo "Generating random beacon..."
 	@$(eval RANDOM_BEACON := $(shell node script/beacon.js))
-	@$(MAKE) verifiers BEACON=$(RANDOM_BEACON)
+	@$(MAKE) verifiers BEACON=$(RANDOM_BEACON) PROD=true
 
 .PHONY: clean
 clean:
