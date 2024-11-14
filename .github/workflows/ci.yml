@@ -1,4 +1,4 @@
-name: test
+name: CI
 
 on: [push]
 
@@ -38,7 +38,7 @@ jobs:
           mv ./circom-linux-amd64 ./circom
       - run: make install
         id: install
-      - run: make circom
-        id: circom
+      - run: make circuits
+        id: circuits
       - run: make test
         id: test
