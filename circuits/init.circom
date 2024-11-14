@@ -82,4 +82,4 @@ template Init (n, maxBombs) {
     id <== hash.out;
 }
 
-component main { public [ width, height, bombs ] } = Init(480, 10);
+component main { public [ width, height, bombs ] } = Init(480, 99);
