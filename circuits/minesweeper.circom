@@ -4,6 +4,9 @@ include "../node_modules/circomlib/circuits/mimcsponge.circom";
 
 template Hash (n) {
     signal input grid[n];
+    signal input width;
+    signal input height;
+    signal input bombs;
     signal input salt;
 
     signal output out;
