@@ -6,19 +6,19 @@ import {Minesweeper} from "../contracts/Minesweeper.sol";
 import {InitVerifier} from "../contracts/verifiers/InitVerifier.sol";
 
 contract MinesweeperTest is Test {
+    Minesweeper public minesweeper;
+
+    function setUp() public {
+        InitVerifier initVerifier = new InitVerifier();
+        minesweeper = new Minesweeper(address(initVerifier));
+    }
+
     struct Grid {
         uint256[][] cells;
         uint256 width;
         uint256 height;
         uint256 bombs;
         uint256 salt;
-    }
-
-    Minesweeper public minesweeper;
-
-    function setUp() public {
-        InitVerifier initVerifier = new InitVerifier();
-        minesweeper = new Minesweeper(address(initVerifier));
     }
 
     function mockGrid() public pure returns (Grid memory grid) {
@@ -44,10 +44,14 @@ contract MinesweeperTest is Test {
         grid.salt = 1;
     }
 
-    function proveInit(Grid memory grid)
-        public
-        returns (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC, uint256[4] memory pubSignals)
-    {
+    struct Init {
+        uint256[2] pA;
+        uint256[2][2] pB;
+        uint256[2] pC;
+        uint256[4] pubSignals;
+    }
+
+    function proveInit(Grid memory grid) public returns (Init memory init) {
         bytes memory input = abi.encode(grid.cells, grid.salt);
 
         string[] memory inputs = new string[](3);
@@ -57,15 +61,15 @@ contract MinesweeperTest is Test {
 
         bytes memory result = vm.ffi(inputs);
 
-        (pA, pB, pC, pubSignals) = abi.decode(result, (uint256[2], uint256[2][2], uint256[2], uint256[4]));
+        (init.pA, init.pB, init.pC, init.pubSignals) =
+            abi.decode(result, (uint256[2], uint256[2][2], uint256[2], uint256[4]));
     }
 
     function test_Init() public {
         Grid memory grid = mockGrid();
 
-        (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC, uint256[4] memory pubSignals) =
-            proveInit(grid);
+        Init memory init = proveInit(grid);
 
-        minesweeper.init(pA, pB, pC, pubSignals);
+        minesweeper.init(init.pA, init.pB, init.pC, init.pubSignals);
     }
 }
