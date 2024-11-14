@@ -12,24 +12,27 @@ template Init (n, maxBombs) {
 
     signal output id;
 
+    // Ensure that the grid size is less than 2^10
+    assert(n <= 2**10);
+
     // Width checks
-    component widthGreaterThanOne = GreaterThan(8);
+    component widthGreaterThanOne = GreaterThan(10);
     widthGreaterThanOne.in[0] <== width;
     widthGreaterThanOne.in[1] <== 1;
     widthGreaterThanOne.out === 1;
 
-    component widthLessThanN = LessThan(8);
+    component widthLessThanN = LessThan(10);
     widthLessThanN.in[0] <== width;
     widthLessThanN.in[1] <== n;
     widthLessThanN.out === 1;
 
     // Height checks
-    component heightGreaterThanOne = GreaterThan(8);
+    component heightGreaterThanOne = GreaterThan(10);
     heightGreaterThanOne.in[0] <== height;
     heightGreaterThanOne.in[1] <== 1;
     heightGreaterThanOne.out === 1;
 
-    component heightLessThanN = LessThan(8);
+    component heightLessThanN = LessThan(10);
     heightLessThanN.in[0] <== height;
     heightLessThanN.in[1] <== n;
     heightLessThanN.out === 1;
@@ -38,18 +41,18 @@ template Init (n, maxBombs) {
     signal squares;
     squares <== width * height;
 
-    component lessThanN = LessEqThan(8);
+    component lessThanN = LessEqThan(10);
     lessThanN.in[0] <== squares;
     lessThanN.in[1] <== n;
     lessThanN.out === 1;
 
     // Bomb count checks
-    component bombsGreaterThanZero = GreaterThan(8);
+    component bombsGreaterThanZero = GreaterThan(10);
     bombsGreaterThanZero.in[0] <== bombs;
     bombsGreaterThanZero.in[1] <== 0;
     bombsGreaterThanZero.out === 1;
 
-    component lessThanMax = LessEqThan(8);
+    component lessThanMax = LessEqThan(10);
     lessThanMax.in[0] <== bombs;
     lessThanMax.in[1] <== maxBombs;
     lessThanMax.out === 1;
@@ -79,4 +82,4 @@ template Init (n, maxBombs) {
     id <== hash.out;
 }
 
-component main { public [ width, height, bombs ] } = Init(80, 10);
+component main { public [ width, height, bombs ] } = Init(480, 10);

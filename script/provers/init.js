@@ -3,6 +3,8 @@ const path = require("path");
 const snarkjs = require("snarkjs");
 const { encodeAbiParameters, decodeAbiParameters } = require("viem");
 
+const N = 480;
+
 async function main() {
 	const rawInput = process.argv[2];
 	const decodedInput = decodeAbiParameters(
@@ -17,12 +19,16 @@ async function main() {
 	);
 
 	const grid = decodedInput[0].flat().map((cell) => cell.toString());
+	if (grid.length > N) {
+		throw new Error(`Grid size ${grid.length} exceeds maximum size ${N}`);
+	}
+	const paddedGrid = [...grid, ...Array(N - grid.length).fill("0")];
 	const width = decodedInput[1].toString();
 	const height = decodedInput[2].toString();
 	const bombs = decodedInput[3].toString();
 	const salt = decodedInput[4].toString();
 
-	const input = { grid, width, height, bombs, salt };
+	const input = { grid: paddedGrid, width, height, bombs, salt };
 
 	const { proof, publicSignals } = await snarkjs.groth16.fullProve(
 		input,
