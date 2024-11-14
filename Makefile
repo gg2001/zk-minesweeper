@@ -55,8 +55,11 @@ circuits: $(ARTIFACTS_DIR)
 	done
 
 .PHONY: verifiers
-verifiers: circuits
+verifiers: $(PTAU_FILE)
 	@for circuit in $(CIRCUITS); do \
+		if [ ! -f "$(ARTIFACTS_DIR)/$$circuit.r1cs" ]; then \
+			$(MAKE) circuits; \
+		fi; \
 		echo "Generating verifier for $$circuit...$$( [ "$(BEACON)" = "$(DEFAULT_BEACON)" ] && echo " (BEACON=$(BEACON))" || echo " (BEACON=RANDOM)" )"; \
 		pnpm snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-0000.zkey; \
 		if [ "$(PROD)" = "true" ]; then \
@@ -81,15 +84,19 @@ verifiers: circuits
 	done
 
 .PHONY: verifiers-prod
-verifiers-prod: circuits
+verifiers-prod:
 	@echo "Generating random beacon..."
 	@$(eval RANDOM_BEACON := $(shell node script/beacon.js))
 	@$(MAKE) verifiers BEACON=$(RANDOM_BEACON) PROD=true
 
+.PHONY: clean-circom
+clean-circom:
+	@rm -rf $(ARTIFACTS_DIR)
+
 .PHONY: clean
 clean:
 	@echo "Cleaning..."
-	@rm -rf $(ARTIFACTS_DIR)
+	@$(MAKE) clean-circom
 	@rm -rf node_modules
 	@rm -rf .next
 	@forge clean
