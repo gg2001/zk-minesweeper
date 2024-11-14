@@ -48,7 +48,6 @@ circuits: $(ARTIFACTS_DIR)
 		if [ -f circuits/$$circuit.json ]; then \
 			echo "Calculating witness for $$circuit..."; \
 			pnpm snarkjs wtns calculate $(ARTIFACTS_DIR)/$$circuit.wasm circuits/$$circuit.json $(ARTIFACTS_DIR)/$$circuit.wtns; \
-			pnpm snarkjs wej $(ARTIFACTS_DIR)/$$circuit.wtns $(ARTIFACTS_DIR)/$$circuit.public.json; \
 			echo "Checking witness for $$circuit..."; \
 			pnpm snarkjs wtns check $(ARTIFACTS_DIR)/$$circuit.r1cs $(ARTIFACTS_DIR)/$$circuit.wtns; \
 		fi \
