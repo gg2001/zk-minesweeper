@@ -5,7 +5,8 @@ PTAU_FILE := $(ARTIFACTS_DIR)/pot17_final.ptau
 
 CIRCUITS := init
 
-BEACON := 0000000000000000000000000000000000000000000000000000000000000000
+DEFAULT_BEACON := 0000000000000000000000000000000000000000000000000000000000000000
+BEACON := $(DEFAULT_BEACON)
 
 
 .PHONY: all
@@ -56,7 +57,7 @@ circuits: $(ARTIFACTS_DIR)
 .PHONY: verifiers
 verifiers: circuits
 	@for circuit in $(CIRCUITS); do \
-		echo "Generating verifier for $$circuit..."; \
+		echo "Generating verifier for $$circuit...$$( [ "$(BEACON)" = "$(DEFAULT_BEACON)" ] && echo " (BEACON=$(BEACON))" || echo " (BEACON=RANDOM)" )"; \
 		pnpm snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey; \
 		pnpm snarkjs zkey beacon $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(BEACON) 10 -n="Final Beacon phase2"; \
 		pnpm snarkjs zkey export verificationkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(ARTIFACTS_DIR)/$${circuit}.vkey.json; \
@@ -70,6 +71,12 @@ verifiers: circuits
 			pnpm snarkjs groth16 verify $(ARTIFACTS_DIR)/$$circuit.vkey.json $(ARTIFACTS_DIR)/$$circuit.public.json $(ARTIFACTS_DIR)/$$circuit.proof.json; \
 		fi \
 	done
+
+.PHONY: verifiers-prod
+verifiers-prod: circuits
+	@echo "Generating random beacon..."
+	@$(eval RANDOM_BEACON := $(shell node script/beacon.js))
+	@$(MAKE) verifiers BEACON=$(RANDOM_BEACON)
 
 .PHONY: clean
 clean:
