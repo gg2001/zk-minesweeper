@@ -1,8 +1,8 @@
 pragma circom 2.2.0;
 
-include "../node_modules/circomlib/circuits/mimcsponge.circom";
+include "../node_modules/circomlib/circuits/poseidon.circom";
 
-template Hash (n) {
+template Hash (n, batchSize) {
     signal input grid[n];
     signal input width;
     signal input height;
@@ -11,13 +11,37 @@ template Hash (n) {
 
     signal output out;
 
-    // Hash to generate ID
-    component mimc = MiMCSponge(n + 1, 220, 1);
-    for (var i = 0; i < n; i++) {
-        mimc.ins[i] <== grid[i];
-    }
-    mimc.ins[n] <== salt;
-    mimc.k <== 0;
+    // n must be a multiple of batchSize
+    assert(n % batchSize == 0);
 
-    out <== mimc.outs[0];
+    // Ensure that we don't exceed the Poseidon input limit
+    assert(n / batchSize <= 10);
+
+    // Hash each batch
+    component poseidonBatch[(n / batchSize)];
+    for (var i = 0; i < (n / batchSize); i++) {
+        poseidonBatch[i] = Poseidon(2);
+    }
+
+    // Hash each batch of batchSize bits
+    component poseidon = Poseidon((n / batchSize) + 4);
+    for (var i = 0; i < (n / batchSize); i++) {
+        var gridBits = 0;
+        for (var j = 0; j < batchSize; j++) {
+            gridBits += (2 ** j) * grid[i * batchSize + j];
+        }
+
+        poseidonBatch[i].inputs[0] <== gridBits;
+        poseidonBatch[i].inputs[1] <== i;
+
+        poseidon.inputs[i] <== poseidonBatch[i].out;
+    }
+
+    // Generate hash
+    poseidon.inputs[n / batchSize + 0] <== width;
+    poseidon.inputs[n / batchSize + 1] <== height;
+    poseidon.inputs[n / batchSize + 2] <== bombs;
+    poseidon.inputs[n / batchSize + 3] <== salt;
+
+    out <== poseidon.out;
 }

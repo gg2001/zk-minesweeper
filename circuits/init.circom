@@ -68,7 +68,7 @@ template Init (n, maxBombs) {
     grid[0] === 0;
 
     // Hash to generate ID
-    component hash = Hash(n);
+    component hash = Hash(n, 80);
     for (var i = 0; i < n; i++) {
         hash.grid[i] <== grid[i];
     }
