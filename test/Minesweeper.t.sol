@@ -13,7 +13,7 @@ contract MinesweeperTest is Test {
         minesweeper = new Minesweeper(address(initVerifier));
     }
 
-    function newGrid() public pure returns (uint256[10][8] memory grid, uint256 salt) {
+    function testGrid() public pure returns (uint256[10][8] memory grid, uint256 salt) {
         grid[0][1] = 1;
         grid[0][2] = 1;
         grid[0][7] = 1;
@@ -49,7 +49,7 @@ contract MinesweeperTest is Test {
     }
 
     function test_Init() public {
-        (uint256[10][8] memory grid, uint256 salt) = newGrid();
+        (uint256[10][8] memory grid, uint256 salt) = testGrid();
 
         (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC, uint256[4] memory pubSignals) =
             proveInit(grid, salt);
