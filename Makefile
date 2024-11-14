@@ -3,7 +3,7 @@ ARTIFACTS_DIR = artifacts/circom
 PTAU_URL := https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_15.ptau
 PTAU_FILE := $(ARTIFACTS_DIR)/pot15_final.ptau
 
-CIRCUITS := init
+CIRCUITS := init reveal
 
 DEFAULT_BEACON := 0000000000000000000000000000000000000000000000000000000000000000
 BEACON := $(DEFAULT_BEACON)

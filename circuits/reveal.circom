@@ -11,6 +11,16 @@ template Reveal (n) {
     signal input id;
     signal input index;
 
+    component hash = Hash(n, 80);
+    for (var i = 0; i < n; i++) {
+        hash.grid[i] <== grid[i];
+    }
+    hash.width <== width;
+    hash.height <== height;
+    hash.bombs <== bombs;
+    hash.salt <== salt;
+    id === hash.out;
+
     signal output out[n];
 }
 
