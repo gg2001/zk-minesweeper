@@ -17,14 +17,28 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+      - uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/circom
+          key: ${{ runner.os }}-circom-v2.2.0
+        id: cache-circom
+      - if: ${{ steps.cache-circom.outputs.cache-hit != 'true' }}
+        shell: bash
+        working-directory: /usr/local/bin
+        run: |
+          wget "https://github.com/iden3/circom/releases/download/v2.2.0/circom-linux-amd64"
+          chmod +x "./circom-linux-amd64"
+          mv ./circom-linux-amd64 ./circom
       - run: make install
         id: install
-      - run: |
-          forge --version
-          forge build --sizes
-        id: build
+      - run: make circom
+        id: circom
       - run: make test
         id: test
