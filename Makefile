@@ -1,6 +1,6 @@
 ARTIFACTS_DIR = artifacts/circom
 
-PTAU_URL := https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_15.ptau
+PTAU_URL := https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_15.ptau
 PTAU_FILE := $(ARTIFACTS_DIR)/pot15_final.ptau
 
 CIRCUITS := init
@@ -9,7 +9,7 @@ BEACON := 0000000000000000000000000000000000000000000000000000000000000000
 
 
 .PHONY: all
-all: ptau circuits verifiers
+all: ptau circuits verifiers format
 
 
 $(ARTIFACTS_DIR):
@@ -21,9 +21,21 @@ $(PTAU_FILE): $(ARTIFACTS_DIR)
 		curl -L $(PTAU_URL) -o $(PTAU_FILE); \
 	fi
 
+
 .PHONY: ptau
 ptau: $(PTAU_FILE)
 
+.PHONY: install
+install:
+	@echo "Installing..."
+	@pnpm install
+	@forge install
+
+.PHONY: format
+format:
+	@echo "Formatting..."
+	@pnpm format
+	@forge fmt
 
 .PHONY: circuits
 circuits: $(ARTIFACTS_DIR)
@@ -47,3 +59,11 @@ verifiers: circuits
 		snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey contracts/verifiers/$${circuit_cap}Verifier.sol; \
 		sed -i '' "s/contract Groth16Verifier/contract $${circuit_cap}Verifier/" contracts/verifiers/$${circuit_cap}Verifier.sol; \
 	done
+
+.PHONY: clean
+clean:
+	@echo "Cleaning..."
+	@rm -rf $(ARTIFACTS_DIR)
+	@rm -rf node_modules
+	@rm -rf .next
+	@forge clean
