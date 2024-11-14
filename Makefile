@@ -1,7 +1,7 @@
 ARTIFACTS_DIR = artifacts/circom
 
-PTAU_URL := https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_15.ptau
-PTAU_FILE := $(ARTIFACTS_DIR)/pot15_final.ptau
+PTAU_URL := https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_17.ptau
+PTAU_FILE := $(ARTIFACTS_DIR)/pot17_final.ptau
 
 CIRCUITS := init
 
@@ -45,6 +45,11 @@ circuits: $(ARTIFACTS_DIR)
 		mv $(ARTIFACTS_DIR)/$${circuit}_js/$${circuit}.wasm $(ARTIFACTS_DIR)/ && \
 		mv $(ARTIFACTS_DIR)/$${circuit}_js/$${circuit}.wat $(ARTIFACTS_DIR)/ && \
 		rm -rf $(ARTIFACTS_DIR)/$${circuit}_js; \
+		if [ -f circuits/$$circuit.json ]; then \
+			echo "Calculating witness for $$circuit..."; \
+			snarkjs wtns calculate $(ARTIFACTS_DIR)/$$circuit.wasm circuits/$$circuit.json $(ARTIFACTS_DIR)/$$circuit.wtns; \
+			snarkjs wej $(ARTIFACTS_DIR)/$$circuit.wtns $(ARTIFACTS_DIR)/$$circuit.public.json; \
+		fi \
 	done
 
 .PHONY: verifiers
@@ -58,6 +63,12 @@ verifiers: circuits
 		circuit_cap=$$(echo "$$circuit" | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}'); \
 		snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey contracts/verifiers/$${circuit_cap}Verifier.sol; \
 		sed -i '' "s/contract Groth16Verifier/contract $${circuit_cap}Verifier/" contracts/verifiers/$${circuit_cap}Verifier.sol; \
+		if [ -f $(ARTIFACTS_DIR)/$$circuit.wtns ]; then \
+			echo "Proving $$circuit..."; \
+			snarkjs groth16 prove $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$$circuit.wtns $(ARTIFACTS_DIR)/$$circuit.proof.json $(ARTIFACTS_DIR)/$$circuit.public.json; \
+			echo "Verifying $$circuit..."; \
+			snarkjs groth16 verify $(ARTIFACTS_DIR)/$$circuit.vkey.json $(ARTIFACTS_DIR)/$$circuit.public.json $(ARTIFACTS_DIR)/$$circuit.proof.json; \
+		fi \
 	done
 
 .PHONY: clean

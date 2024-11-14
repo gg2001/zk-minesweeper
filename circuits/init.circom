@@ -54,8 +54,10 @@ template Init (n, maxBombs) {
     lessThanMax.in[1] <== maxBombs;
     lessThanMax.out === 1;
 
+    // Grid bomb count check
     var bombCount = 0;
     for (var i = 0; i < n; i++) {
+        // Grid values must be 0 or 1
         grid[i] * (grid[i] - 1) === 0;
 
         bombCount += grid[i];
@@ -74,4 +76,4 @@ template Init (n, maxBombs) {
     id <== hash.out;
 }
 
-component main { public [ width, height, bombs ] } = Init(40, 10);
+component main { public [ width, height, bombs ] } = Init(80, 10);
