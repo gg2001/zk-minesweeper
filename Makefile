@@ -49,6 +49,8 @@ circuits: $(ARTIFACTS_DIR)
 			echo "Calculating witness for $$circuit..."; \
 			pnpm snarkjs wtns calculate $(ARTIFACTS_DIR)/$$circuit.wasm circuits/$$circuit.json $(ARTIFACTS_DIR)/$$circuit.wtns; \
 			pnpm snarkjs wej $(ARTIFACTS_DIR)/$$circuit.wtns $(ARTIFACTS_DIR)/$$circuit.public.json; \
+			echo "Checking witness for $$circuit..."; \
+			pnpm snarkjs wtns check $(ARTIFACTS_DIR)/$$circuit.r1cs $(ARTIFACTS_DIR)/$$circuit.wtns; \
 		fi \
 	done
 
@@ -56,16 +58,15 @@ circuits: $(ARTIFACTS_DIR)
 verifiers: circuits
 	@for circuit in $(CIRCUITS); do \
 		echo "Generating verifier for $$circuit..."; \
-		pnpm snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-temp.zkey; \
-		pnpm snarkjs zkey beacon $(ARTIFACTS_DIR)/$${circuit}-temp.zkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(BEACON) 10 -n="Final Beacon phase2"; \
-		rm -rf $(ARTIFACTS_DIR)/$${circuit}-temp.zkey; \
-		pnpm snarkjs zkey export verificationkey $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$${circuit}.vkey.json; \
+		pnpm snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey; \
+		pnpm snarkjs zkey beacon $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(BEACON) 10 -n="Final Beacon phase2"; \
+		pnpm snarkjs zkey export verificationkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(ARTIFACTS_DIR)/$${circuit}.vkey.json; \
 		circuit_cap=$$(echo "$$circuit" | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}'); \
-		pnpm snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey contracts/verifiers/$${circuit_cap}Verifier.sol; \
+		pnpm snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}.zkey contracts/verifiers/$${circuit_cap}Verifier.sol; \
 		sed -i '' "s/contract Groth16Verifier/contract $${circuit_cap}Verifier/" contracts/verifiers/$${circuit_cap}Verifier.sol; \
 		if [ -f $(ARTIFACTS_DIR)/$$circuit.wtns ]; then \
 			echo "Proving $$circuit..."; \
-			pnpm snarkjs groth16 prove $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$$circuit.wtns $(ARTIFACTS_DIR)/$$circuit.proof.json $(ARTIFACTS_DIR)/$$circuit.public.json; \
+			pnpm snarkjs groth16 prove $(ARTIFACTS_DIR)/$${circuit}.zkey $(ARTIFACTS_DIR)/$$circuit.wtns $(ARTIFACTS_DIR)/$$circuit.proof.json $(ARTIFACTS_DIR)/$$circuit.public.json; \
 			echo "Verifying $$circuit..."; \
 			pnpm snarkjs groth16 verify $(ARTIFACTS_DIR)/$$circuit.vkey.json $(ARTIFACTS_DIR)/$$circuit.public.json $(ARTIFACTS_DIR)/$$circuit.proof.json; \
 		fi \
