@@ -48,7 +48,7 @@ contract MinesweeperTest is Test {
         public
         returns (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC, uint256[4] memory pubSignals)
     {
-        bytes memory input = abi.encode(grid.cells, grid.width, grid.height, grid.bombs, grid.salt);
+        bytes memory input = abi.encode(grid.cells, grid.salt);
 
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
