@@ -13,14 +13,15 @@ template Init (width, height, bombs) {
     assert((width * height) <= 2**10);
 
     // Grid bomb count check
-    var bombCount = 0;
+    signal bombCount[(width * height) + 1];
+    bombCount[0] <== 0;
     for (var i = 0; i < (width * height); i++) {
         // Grid values must be 0 or 1
         grid[i] * (grid[i] - 1) === 0;
 
-        bombCount += grid[i];
+        bombCount[i + 1] <== bombCount[i] + grid[i];
     }
-    bombCount === bombs;
+    bombCount[width * height] === bombs;
 
     // Safe click cell in the grid
     grid[0] === 0;

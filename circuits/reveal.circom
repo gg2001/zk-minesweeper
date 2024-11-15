@@ -32,75 +32,51 @@ template Reveal (width, height, bombs) {
     }
     bomb <== bombAccumulator[width * height];
 
-    // Calculate the neighbor bomb counts for each cell
+    // Sum the neighbor bomb counts for each cell
     signal neighborCounts[width * height];
+    signal neighborAccumulator[width * height][8 + 1];
     for (var x = 0; x < width; x++) {
         for (var y = 0; y < height; y++) {
-            var cell = y * width + x;
+            var i = y * width + x;
 
-            var neighborCount = 0;
+            var j = 0;
+            neighborAccumulator[i][j] <== 0;
             for (var dy = -1; dy <= 1; dy++) {
                 for (var dx = -1; dx <= 1; dx++) {
                     if (dx != 0 || dy != 0) {
                         var neighbor = ((y + dy) * width) + (x + dx);
-                        if (neighbor >= 0 && neighbor < (width * height)) {
-                            neighborCount += grid[neighbor];
-                        }
+
+                        neighborAccumulator[i][j + 1] <==
+                            neighborAccumulator[i][j] + (neighbor >= 0 && neighbor < (width * height) ? grid[neighbor] : 0);
+                        j++;
                     }
                 }
             }
 
-            neighborCounts[cell] <== neighborCount;
+            neighborCounts[i] <== neighborAccumulator[i][8];
         }
     }
 
-    // signal neighborValues[n][8];
-    // // var neighborCount = 0;
-    // signal neighborCount[n][8+1];
-    // for (var i = 0; i < n; i++) {
-    //     var y = i \ width;
-    //     var x = i % width;
+    // Reveal partial neighbor counts
+    var partialReveal[width * height];
+    var nextCell = index;
+    for (var i = 0; i < (width * height); i++) {
+        partialReveal[i] = bomb * grid[i];
 
-    //     var neighbor = 0;
-    //     for (var dy = -1; dy <= 1; dy++) {
-    //         for (var dx = -1; dx <= 1; dx++) {
-    //             // Skip the cell
-    //             if (dx != 0 || dy != 0) {
-    //                 var ny = y + dy;
-    //                 var nx = x + dx;
-    //                 // ((i \ width) + dy) * width + ((i % width) + dx)
-    //                 // (i + dy * width) + ((i % width) + dx)
-    //                 var neighborIdx = ny * width + nx;
-
-    //                 isValidNeighbor[i][neighbor].in[0] <-- neighborIdx;
-    //                 isValidNeighbor[i][neighbor].in[0] % width === 0;
-    //                 isValidNeighbor[i][neighbor].in[1] <== 0;
-    //                 neighborCount[i][neighbor+1] <-- grid[isValidNeighbor[i][neighbor].out * neighborIdx];
-
-
-    //                 // isValidNeighbor[i][neighbor] = IsEqual();
-    //                 // isValidNeighbor[i][neighbor].in[0] <== 1;
-    //                 // sValidNeighbor[i][neighbor].in[1] <== (ny >= 0 && ny < height && nx >= 0 && nx < width && neighborIdx < n) ? 1 : 0;
-                    
-    //                 //neighborValues[i][neighbor] <== isValidNeighbor[i][neighbor].out * (neighborIdx < n ? grid[neighborIdx] : 0);
-    //                 //neighborCount += neighborValues[i][neighbor];
-    //                 // neighbor++;
-    //                 neighbor++;
-    //             }
-    //         }
-    //     }
-    //     neighborCounts[i] <== 0;
-    // }
+        for (var j = 0; j < i; j++) {
+            partialReveal[i] += neighborCounts[j];
+        }
+    }
 
     // If the index is a bomb, reveal the entire grid
-    var temp[width * height];
+    var fullReveal[width * height];
     for (var i = 0; i < (width * height); i++) {
-        temp[i] = bomb * grid[i];
+        fullReveal[i] = bomb * grid[i];
     }
 
     // Output
     for (var i = 0; i < (width * height); i++) {
-        out[i] <== temp[i];
+        out[i] <== fullReveal[i];
     }
 }
 
