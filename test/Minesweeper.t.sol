@@ -75,6 +75,9 @@ contract MinesweeperTest is Test {
         uint256[2] pC;
         uint256[83] pubSignals;
         uint256[][] grid;
+        uint256 bomb;
+        uint256 id;
+        uint256 index;
     }
 
     function proveReveal(Grid memory grid, uint256 id, uint256 index) public returns (Reveal memory reveal) {
@@ -98,6 +101,35 @@ contract MinesweeperTest is Test {
         for (uint256 i = 0; i < (grid.width * grid.height); i++) {
             reveal.grid[i / grid.width][i % grid.width] = reveal.pubSignals[i];
         }
+
+        reveal.bomb = reveal.pubSignals[grid.width * grid.height];
+        reveal.id = reveal.pubSignals[(grid.width * grid.height) + 1];
+        reveal.index = reveal.pubSignals[(grid.width * grid.height) + 2];
+    }
+
+    function assertGrids(uint256[][] memory grid1, uint256[][] memory grid2) public pure {
+        assertEq(grid1.length, grid2.length, "Grid heights do not match");
+        for (uint256 i = 0; i < grid1.length; i++) {
+            assertEq(grid1[i].length, grid2[i].length, "Grid widths do not match");
+            for (uint256 j = 0; j < grid1[i].length; j++) {
+                assertEq(
+                    grid1[i][j],
+                    grid2[i][j],
+                    string.concat("Grid values do not match at [", vm.toString(i), "][", vm.toString(j), "]")
+                );
+            }
+        }
+    }
+
+    function logGrid(uint256[][] memory grid) public pure {
+        for (uint256 i = 0; i < grid.length; i++) {
+            string memory row = "";
+            for (uint256 j = 0; j < grid[i].length; j++) {
+                row = string.concat(row, vm.toString(grid[i][j]), " ");
+            }
+            console.log(row);
+        }
+        console.log("");
     }
 
     function test_Init() public {
@@ -107,12 +139,19 @@ contract MinesweeperTest is Test {
         minesweeper.init(init.pA, init.pB, init.pC, init.pubSignals);
     }
 
-    function test_Reveal() public {
+    function test_RevealBomb() public {
         Grid memory grid = mockGrid();
         Init memory init = proveInit(grid);
         minesweeper.init(init.pA, init.pB, init.pC, init.pubSignals);
 
-        Reveal memory reveal = proveReveal(grid, init.id, 11);
+        uint256 index = 11;
+
+        Reveal memory reveal = proveReveal(grid, init.id, index);
         minesweeper.reveal(reveal.pA, reveal.pB, reveal.pC, reveal.pubSignals);
+
+        assertGrids(grid.cells, reveal.grid);
+        assertEq(reveal.bomb, 1);
+        assertEq(reveal.index, index);
+        assertEq(reveal.id, init.id);
     }
 }
