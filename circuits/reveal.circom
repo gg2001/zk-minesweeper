@@ -46,8 +46,8 @@ template Reveal (width, height, bombs) {
                     if (dx != 0 || dy != 0) {
                         var neighbor = ((y + dy) * width) + (x + dx);
 
-                        neighborAccumulator[i][j + 1] <==
-                            neighborAccumulator[i][j] + (neighbor >= 0 && neighbor < (width * height) ? grid[neighbor] : 0);
+                        neighborAccumulator[i][j + 1] <== neighborAccumulator[i][j] +
+                            (neighbor >= 0 && neighbor < (width * height) ? grid[neighbor] : 0);
                         j++;
                     }
                 }
