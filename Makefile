@@ -4,7 +4,6 @@ PTAU_URL := https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0
 PTAU_FILE := $(ARTIFACTS_DIR)/pot17_final.ptau
 
 CIRCUITS := init reveal
-SOLIDITY_CIRCUITS := init
 
 DEFAULT_BEACON := 0000000000000000000000000000000000000000000000000000000000000000
 BEACON := $(DEFAULT_BEACON)
@@ -81,11 +80,9 @@ verifiers: $(PTAU_FILE)
 		pnpm snarkjs zkey beacon $(ARTIFACTS_DIR)/$${circuit}-contribution.zkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(BEACON) 10 -n="Final Beacon phase2"; \
 		pnpm snarkjs zkey export verificationkey $(ARTIFACTS_DIR)/$${circuit}.zkey $(ARTIFACTS_DIR)/$${circuit}.vkey.json; \
 		circuit_cap=$$(echo "$$circuit" | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}'); \
-		if echo "$(SOLIDITY_CIRCUITS)" | grep -w "$$circuit" > /dev/null; then \
-			echo "Exporting solidity verifier for $$circuit..."; \
-			pnpm snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}.zkey contracts/verifiers/$${circuit_cap}Verifier.sol; \
-			sed -i '' "s/contract Groth16Verifier/contract $${circuit_cap}Verifier/" contracts/verifiers/$${circuit_cap}Verifier.sol; \
-		fi; \
+		echo "Exporting solidity verifier for $$circuit..."; \
+		pnpm snarkjs zkey export solidityverifier $(ARTIFACTS_DIR)/$${circuit}.zkey contracts/verifiers/$${circuit_cap}Verifier.sol; \
+		sed -i '' "s/contract Groth16Verifier/contract $${circuit_cap}Verifier/" contracts/verifiers/$${circuit_cap}Verifier.sol; \
 		if [ -f $(ARTIFACTS_DIR)/$$circuit.wtns ]; then \
 			echo "Proving $$circuit..."; \
 			pnpm snarkjs groth16 prove $(ARTIFACTS_DIR)/$${circuit}.zkey $(ARTIFACTS_DIR)/$$circuit.wtns $(ARTIFACTS_DIR)/$$circuit.proof.json $(ARTIFACTS_DIR)/$$circuit.public.json; \
