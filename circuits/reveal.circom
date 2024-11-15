@@ -34,28 +34,23 @@ template Reveal (width, height, bombs) {
 
     // Calculate the neighbor bomb counts for each cell
     signal neighborCounts[width * height];
-    signal neighborAccumulator[width * height][8+1];
     for (var x = 0; x < width; x++) {
         for (var y = 0; y < height; y++) {
             var cell = y * width + x;
 
-            neighborAccumulator[cell][0] <== 0;
-            var i = 0;
+            var neighborCount = 0;
             for (var dy = -1; dy <= 1; dy++) {
                 for (var dx = -1; dx <= 1; dx++) {
                     if (dx != 0 || dy != 0) {
                         var neighbor = ((y + dy) * width) + (x + dx);
                         if (neighbor >= 0 && neighbor < (width * height)) {
-                            neighborAccumulator[cell][i+1] <== neighborAccumulator[cell][i] + grid[neighbor];
-                        } else {
-                            neighborAccumulator[cell][i+1] <== neighborAccumulator[cell][i] + 0;
+                            neighborCount += grid[neighbor];
                         }
-                        i++;
                     }
                 }
             }
 
-            neighborCounts[cell] <== neighborAccumulator[cell][8];
+            neighborCounts[cell] <== neighborCount;
         }
     }
 
