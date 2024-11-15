@@ -40,6 +40,7 @@ template Reveal (width, height, bombs) {
         indexEqual[i].in[1] <== i;
         bombAccumulator[i+1] <== bombAccumulator[i] + (indexEqual[i].out * grid[i]);
     }
+    // bomb = 1 if the index is a bomb, else 0
     bomb <== bombAccumulator[width * height];
 
     // Sum the neighbor bomb counts for each cell
@@ -73,6 +74,7 @@ template Reveal (width, height, bombs) {
     // Signals
     signal nextCell[width * height];
     signal cellNeighbors[width * height];
+    signal validCell[width * height];
     nextCell[0] <== index;
     // Components
     component nextCellPositive[width * height];
@@ -81,7 +83,7 @@ template Reveal (width, height, bombs) {
     // Accumulators
     signal neighborCountAccumulator[width * height][(width * height) + 1];
     for (var i = 0; i < ((width * height) - 1); i++) {
-        // out = 1 if positive or zero, else 0
+        // out = 1 if nextCell[i] >= 0, else 0
         nextCellPositive[i] = GreaterEqThan(10);
         nextCellPositive[i].in[0] <== nextCell[i];
         nextCellPositive[i].in[1] <== 0;
@@ -96,11 +98,13 @@ template Reveal (width, height, bombs) {
         }
         cellNeighbors[i] <== neighborCountAccumulator[i][width * height];
 
-        // out = 1 if zero, else 0
+        // out = 1 if cellNeighbors[i] == 0, else 0
         neighborCountIsZero[i] = IsZero();
         neighborCountIsZero[i].in <== cellNeighbors[i];
 
-        nextCell[i + 1] <== nextCell[i] + (1 - neighborCountIsZero[i].out);
+        // validCell[i] = 0 if (nextCellPositive[i].out == 1 && neighborCountIsZero[i].out == 1), else 1
+        validCell[i] <== nextCellPositive[i].out * (1 - neighborCountIsZero[i].out);
+        nextCell[i + 1] <== validCell[i] * (nextCell[i] + 1) + (1 - validCell[i]) * (-1);
     }
 
     // If the index is a bomb, reveal the entire grid
