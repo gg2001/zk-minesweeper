@@ -4,7 +4,7 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 include "./minesweeper.circom";
 
 template Init (width, height, bombs) {
-    signal input grid[width * height]; // row-major
+    signal input grid[width * height];
     signal input salt;
 
     signal output id;

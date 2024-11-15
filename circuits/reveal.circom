@@ -4,7 +4,7 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 include "./minesweeper.circom";
 
 template Reveal (width, height, bombs) {
-    signal input grid[width * height]; // row-major
+    signal input grid[width * height];
     signal input salt;
     signal input id;
     signal input index;
@@ -21,25 +21,43 @@ template Reveal (width, height, bombs) {
     id === hash.out;
 
     // Check if the index is a bomb
-    component eq[(width * height)];
-    signal tempBomb[(width * height) + 1];
-    tempBomb[0] <== 0;
+    component indexEqual[width * height];
+    signal bombAccumulator[(width * height) + 1];
+    bombAccumulator[0] <== 0;
     for (var i = 0; i < (width * height); i++) {
-        eq[i] = IsEqual();
-        eq[i].in[0] <== index;
-        eq[i].in[1] <== i;
-        tempBomb[i+1] <== tempBomb[i] + eq[i].out * grid[i];
+        indexEqual[i] = IsEqual();
+        indexEqual[i].in[0] <== index;
+        indexEqual[i].in[1] <== i;
+        bombAccumulator[i+1] <== bombAccumulator[i] + (indexEqual[i].out * grid[i]);
     }
-    bomb <== tempBomb[(width * height)];
+    bomb <== bombAccumulator[width * height];
 
     // Calculate the neighbor bomb counts for each cell
-    // signal neighborCounts[n];
-    // component isValidNeighbor[n][8];  // 8 neighbors per cell
-    // for (var i = 0; i < n; i++) {
-    //     for (var j = 0; j < 8; j++) {
-    //         isValidNeighbor[i][j] = GreaterEqThan(10);
-    //     }
-    // }
+    signal neighborCounts[width * height];
+    signal neighborAccumulator[width * height][8+1];
+    for (var x = 0; x < width; x++) {
+        for (var y = 0; y < height; y++) {
+            var cell = y * width + x;
+
+            neighborAccumulator[cell][0] <== 0;
+            var i = 0;
+            for (var dy = -1; dy <= 1; dy++) {
+                for (var dx = -1; dx <= 1; dx++) {
+                    if (dx != 0 || dy != 0) {
+                        var neighbor = ((y + dy) * width) + (x + dx);
+                        if (neighbor >= 0 && neighbor < (width * height)) {
+                            neighborAccumulator[cell][i+1] <== neighborAccumulator[cell][i] + grid[neighbor];
+                        } else {
+                            neighborAccumulator[cell][i+1] <== neighborAccumulator[cell][i] + 0;
+                        }
+                        i++;
+                    }
+                }
+            }
+
+            neighborCounts[cell] <== neighborAccumulator[cell][8];
+        }
+    }
 
     // signal neighborValues[n][8];
     // // var neighborCount = 0;
@@ -80,7 +98,7 @@ template Reveal (width, height, bombs) {
     // }
 
     // If the index is a bomb, reveal the entire grid
-    var temp[(width * height)];
+    var temp[width * height];
     for (var i = 0; i < (width * height); i++) {
         temp[i] = bomb * grid[i];
     }

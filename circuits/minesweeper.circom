@@ -3,7 +3,7 @@ pragma circom 2.2.0;
 include "../node_modules/circomlib/circuits/poseidon.circom";
 
 template Hash (n, batchSize) {
-    signal input grid[n];
+    signal input grid[n]; // row-major
     signal input salt;
 
     signal output out;
