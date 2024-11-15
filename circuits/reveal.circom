@@ -58,12 +58,11 @@ template Reveal (width, height, bombs) {
                 for (var dx = -1; dx <= 1; dx++) {
                     if (dx != 0 || dy != 0) {
                         var neighbor = ((y + dy) * width) + (x + dx);
-                        var leftCheck = (x == 0) * (neighbor >= (y * width)) + (x != 0) * 1;
-                        var rightCheck = (x == width-1) * (neighbor < ((y+1) * width)) + (x != width-1) * 1;
+                        var inBounds = (y + dy >= 0) && (y + dy < height) && 
+                              (x + dx >= 0) && (x + dx < width);
 
-                        neighborAccumulator[i][j+1] <== neighborAccumulator[i][j] +
-                            (neighbor >= 0 && neighbor < (width * height) && 
-                             leftCheck && rightCheck ? grid[neighbor] : 0);
+                neighborAccumulator[i][j+1] <== neighborAccumulator[i][j] +
+                    (inBounds ? grid[neighbor] : 0);
                         j++;
                     }
                 }

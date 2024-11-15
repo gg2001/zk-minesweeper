@@ -165,8 +165,13 @@ contract MinesweeperTest is Test {
         Reveal memory reveal = proveReveal(grid, init.id, index);
         minesweeper.reveal(reveal.pA, reveal.pB, reveal.pC, reveal.pubSignals);
 
-        logGrid(grid.cells);
-        logGrid(reveal.grid);
+        assertEq(reveal.grid[0][0], 2);
+        for (uint256 i = 0; i < reveal.grid.length; i++) {
+            for (uint256 j = 0; j < reveal.grid[i].length; j++) {
+                if (i == 0 && j == 0) continue;
+                assertEq(reveal.grid[i][j], 0);
+            }
+        }
 
         assertEq(reveal.bomb, 0);
         assertEq(reveal.index, index);
