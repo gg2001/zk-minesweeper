@@ -3,63 +3,18 @@ pragma circom 2.2.0;
 include "../node_modules/circomlib/circuits/comparators.circom";
 include "./minesweeper.circom";
 
-template Init (n, maxBombs) {
-    signal input grid[n];
-    signal input width;
-    signal input height;
-    signal input bombs;
+template Init (width, height, bombs) {
+    signal input grid[width * height]; // row-major
     signal input salt;
 
     signal output id;
 
-    // Ensure that the grid size is less than 2^10
-    assert(n <= 2**10);
-
-    // Width checks
-    component widthGreaterThanOne = GreaterThan(10);
-    widthGreaterThanOne.in[0] <== width;
-    widthGreaterThanOne.in[1] <== 1;
-    widthGreaterThanOne.out === 1;
-
-    component widthLessThanN = LessThan(10);
-    widthLessThanN.in[0] <== width;
-    widthLessThanN.in[1] <== n;
-    widthLessThanN.out === 1;
-
-    // Height checks
-    component heightGreaterThanOne = GreaterThan(10);
-    heightGreaterThanOne.in[0] <== height;
-    heightGreaterThanOne.in[1] <== 1;
-    heightGreaterThanOne.out === 1;
-
-    component heightLessThanN = LessThan(10);
-    heightLessThanN.in[0] <== height;
-    heightLessThanN.in[1] <== n;
-    heightLessThanN.out === 1;
-
-    // Grid size checks
-    signal squares;
-    squares <== width * height;
-
-    component lessThanN = LessEqThan(10);
-    lessThanN.in[0] <== squares;
-    lessThanN.in[1] <== n;
-    lessThanN.out === 1;
-
-    // Bomb count checks
-    component bombsGreaterThanZero = GreaterThan(10);
-    bombsGreaterThanZero.in[0] <== bombs;
-    bombsGreaterThanZero.in[1] <== 0;
-    bombsGreaterThanZero.out === 1;
-
-    component lessThanMax = LessEqThan(10);
-    lessThanMax.in[0] <== bombs;
-    lessThanMax.in[1] <== maxBombs;
-    lessThanMax.out === 1;
+    // Ensure that the grid size is less than 10 bits
+    assert((width * height) <= 2**10);
 
     // Grid bomb count check
     var bombCount = 0;
-    for (var i = 0; i < n; i++) {
+    for (var i = 0; i < (width * height); i++) {
         // Grid values must be 0 or 1
         grid[i] * (grid[i] - 1) === 0;
 
@@ -67,12 +22,12 @@ template Init (n, maxBombs) {
     }
     bombCount === bombs;
 
-    // Safe click spot in the grid
+    // Safe click cell in the grid
     grid[0] === 0;
 
     // Hash to generate ID
-    component hash = Hash(n, 80);
-    for (var i = 0; i < n; i++) {
+    component hash = Hash(width * height, 80);
+    for (var i = 0; i < (width * height); i++) {
         hash.grid[i] <== grid[i];
     }
     hash.width <== width;
@@ -82,4 +37,4 @@ template Init (n, maxBombs) {
     id <== hash.out;
 }
 
-component main { public [ width, height, bombs ] } = Init(480, 99);
+component main = Init(10, 8, 10);

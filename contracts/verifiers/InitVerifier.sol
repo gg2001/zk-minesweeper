@@ -42,20 +42,11 @@ contract InitVerifier {
     uint256 constant deltay1 = 1921085277078744684511176971830319952173319902281081603728474458216922605612;
     uint256 constant deltay2 = 961901284356507153388088069199380552581103880001797976871193700998289486054;
 
-    uint256 constant IC0x = 12009990740780511941423765217306874796943520266482956228327698667628789862204;
-    uint256 constant IC0y = 8499860984217088059528921803175602552360678630967084735654879496271123284471;
+    uint256 constant IC0x = 1124537489058796663648161978786941124529638530253273576719387372511987063040;
+    uint256 constant IC0y = 6041072816664101428725677629545729938628679228085727022599898340159983532875;
 
-    uint256 constant IC1x = 3635864239206066012871190416500611688571059882374817897480755335449340620941;
-    uint256 constant IC1y = 5449503987501958693213008255829149082692481984477716146934314272200455099142;
-
-    uint256 constant IC2x = 1685090958643556689123894963504250893960749912061484463701898096810831649728;
-    uint256 constant IC2y = 11798848729171838367262140550147167817713532261938830399103834857490009686411;
-
-    uint256 constant IC3x = 4094053365182633805179184070082007860667084583546660048130747863555685736156;
-    uint256 constant IC3y = 20780518043582928507223734733721293288774586847675167997837042452022624132873;
-
-    uint256 constant IC4x = 21394884609890433468295490433797364622800494900640790869682266992435906091043;
-    uint256 constant IC4y = 3479575302246851200370759396154457029011398092066744126984913009920850635496;
+    uint256 constant IC1x = 11228348537753203719289501220276998889098793422721811943269220504210106589467;
+    uint256 constant IC1y = 14622657637796607089473960183082303329619598650301204118378337100681875494297;
 
     // Memory data
     uint16 constant pVk = 0;
@@ -67,7 +58,7 @@ contract InitVerifier {
         uint256[2] calldata _pA,
         uint256[2][2] calldata _pB,
         uint256[2] calldata _pC,
-        uint256[4] calldata _pubSignals
+        uint256[1] calldata _pubSignals
     ) public view returns (bool) {
         assembly {
             function checkField(v) {
@@ -113,12 +104,6 @@ contract InitVerifier {
                 // Compute the linear combination vk_x
 
                 g1_mulAccC(_pVk, IC1x, IC1y, calldataload(add(pubSignals, 0)))
-
-                g1_mulAccC(_pVk, IC2x, IC2y, calldataload(add(pubSignals, 32)))
-
-                g1_mulAccC(_pVk, IC3x, IC3y, calldataload(add(pubSignals, 64)))
-
-                g1_mulAccC(_pVk, IC4x, IC4y, calldataload(add(pubSignals, 96)))
 
                 // -A
                 mstore(_pPairing, calldataload(pA))
@@ -171,12 +156,6 @@ contract InitVerifier {
             // Validate that all evaluations ∈ F
 
             checkField(calldataload(add(_pubSignals, 0)))
-
-            checkField(calldataload(add(_pubSignals, 32)))
-
-            checkField(calldataload(add(_pubSignals, 64)))
-
-            checkField(calldataload(add(_pubSignals, 96)))
 
             // Validate all evaluations
             let isValid := checkPairing(_pA, _pB, _pC, _pubSignals, pMem)

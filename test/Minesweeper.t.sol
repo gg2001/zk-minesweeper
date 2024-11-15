@@ -48,7 +48,7 @@ contract MinesweeperTest is Test {
         uint256[2] pA;
         uint256[2][2] pB;
         uint256[2] pC;
-        uint256[4] pubSignals;
+        uint256[1] pubSignals;
     }
 
     function proveInit(Grid memory grid) public returns (Init memory init) {
@@ -62,7 +62,7 @@ contract MinesweeperTest is Test {
         bytes memory result = vm.ffi(inputs);
 
         (init.pA, init.pB, init.pC, init.pubSignals) =
-            abi.decode(result, (uint256[2], uint256[2][2], uint256[2], uint256[4]));
+            abi.decode(result, (uint256[2], uint256[2][2], uint256[2], uint256[1]));
     }
 
     function test_Init() public {

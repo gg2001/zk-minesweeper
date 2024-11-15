@@ -16,7 +16,7 @@ contract Minesweeper {
         uint256[2] calldata _pA,
         uint256[2][2] calldata _pB,
         uint256[2] calldata _pC,
-        uint256[4] calldata _pubSignals
+        uint256[1] calldata _pubSignals
     ) public {
         require(initVerifier.verifyProof(_pA, _pB, _pC, _pubSignals), "Invalid proof");
         commitments[_pubSignals[0]] = true;
