@@ -58,9 +58,12 @@ template Reveal (width, height, bombs) {
                 for (var dx = -1; dx <= 1; dx++) {
                     if (dx != 0 || dy != 0) {
                         var neighbor = ((y + dy) * width) + (x + dx);
+                        var leftCheck = (x == 0) * (neighbor >= (y * width)) + (x != 0) * 1;
+                        var rightCheck = (x == width-1) * (neighbor < ((y+1) * width)) + (x != width-1) * 1;
 
                         neighborAccumulator[i][j+1] <== neighborAccumulator[i][j] +
-                            (neighbor >= 0 && neighbor < (width * height) ? grid[neighbor] : 0);
+                            (neighbor >= 0 && neighbor < (width * height) && 
+                             leftCheck && rightCheck ? grid[neighbor] : 0);
                         j++;
                     }
                 }
@@ -117,8 +120,6 @@ template Reveal (width, height, bombs) {
         cellNeighbors[i] <== neighborCountAccumulator[i][width * height];
         cellX[i] <== cellXAccumulator[i][width * height];
         cellY[i] <== cellYAccumulator[i][width * height];
-
-        log(cell[i], cellNeighbors[i]);
 
         // out = 1 if cellNeighbors[i] == 0, else 0
         neighborCountIsZero[i] = IsZero();
