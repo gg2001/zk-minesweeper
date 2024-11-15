@@ -4,9 +4,6 @@ include "../node_modules/circomlib/circuits/poseidon.circom";
 
 template Hash (n, batchSize) {
     signal input grid[n];
-    signal input width;
-    signal input height;
-    signal input bombs;
     signal input salt;
 
     signal output out;
@@ -16,15 +13,16 @@ template Hash (n, batchSize) {
 
     // Ensure that we don't exceed the Poseidon input limit
     assert(n / batchSize <= 10);
+    assert(n / batchSize >= 1);
 
     // Hash each batch
-    component poseidonBatch[(n / batchSize)];
+    component poseidonBatch[n / batchSize];
     for (var i = 0; i < (n / batchSize); i++) {
         poseidonBatch[i] = Poseidon(2);
     }
 
     // Hash each batch of batchSize bits
-    component poseidon = Poseidon((n / batchSize) + 4);
+    component poseidon = Poseidon((n / batchSize) + 1);
     for (var i = 0; i < (n / batchSize); i++) {
         var gridBits = 0;
         for (var j = 0; j < batchSize; j++) {
@@ -38,10 +36,7 @@ template Hash (n, batchSize) {
     }
 
     // Generate hash
-    poseidon.inputs[n / batchSize + 0] <== width;
-    poseidon.inputs[n / batchSize + 1] <== height;
-    poseidon.inputs[n / batchSize + 2] <== bombs;
-    poseidon.inputs[n / batchSize + 3] <== salt;
+    poseidon.inputs[n / batchSize] <== salt;
 
     out <== poseidon.out;
 }

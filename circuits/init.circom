@@ -30,9 +30,6 @@ template Init (width, height, bombs) {
     for (var i = 0; i < (width * height); i++) {
         hash.grid[i] <== grid[i];
     }
-    hash.width <== width;
-    hash.height <== height;
-    hash.bombs <== bombs;
     hash.salt <== salt;
     id <== hash.out;
 }
