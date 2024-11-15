@@ -23,13 +23,14 @@ template Hash (n, batchSize) {
 
     // Hash each batch of batchSize bits
     component poseidon = Poseidon((n / batchSize) + 1);
+    signal bitsAccumulator[n / batchSize][batchSize + 1];
     for (var i = 0; i < (n / batchSize); i++) {
-        var gridBits = 0;
+        bitsAccumulator[i][0] <== 0;
         for (var j = 0; j < batchSize; j++) {
-            gridBits += (2 ** j) * grid[i * batchSize + j];
+            bitsAccumulator[i][j + 1] <== bitsAccumulator[i][j] + (grid[i * batchSize + j] * (2 ** j));
         }
 
-        poseidonBatch[i].inputs[0] <== gridBits;
+        poseidonBatch[i].inputs[0] <== bitsAccumulator[i][batchSize];
         poseidonBatch[i].inputs[1] <== i;
 
         poseidon.inputs[i] <== poseidonBatch[i].out;
