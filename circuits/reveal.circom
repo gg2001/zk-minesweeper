@@ -74,8 +74,9 @@ template Reveal (width, height, bombs) {
     // Signals
     signal nextCell[((width * height) * 9) + 1];
     signal cellNeighbors[width * height];
+    signal temp[width * height];
     signal validCell[width * height];
-    nextCell[0] <== index;
+    nextCell[0] <== index * ((-2 * bomb) + 1); // If bomb, start at -1, else 0
     // Components
     component nextCellPositive[width * height];
     component nextCellEqual[width * height][width * height];
@@ -100,12 +101,15 @@ template Reveal (width, height, bombs) {
         }
         cellNeighbors[i] <== neighborCountAccumulator[i][width * height];
 
+        log(nextCell[i], cellNeighbors[i]);
+
         // out = 1 if cellNeighbors[i] == 0, else 0
         neighborCountIsZero[i] = IsZero();
         neighborCountIsZero[i].in <== cellNeighbors[i];
 
-        // validCell[i] = 1 if (nextCellPositive[i].out == 1 && neighborCountIsZero[i].out == 1), else 0
-        validCell[i] <== nextCellPositive[i].out * neighborCountIsZero[i].out;
+        // validCell[i] = 1 if (nextCellPositive[i].out == 0 || neighborCountIsZero[i].out == 0 || bomb == 1), else 0
+        temp[i] <== nextCellPositive[i].out * neighborCountIsZero[i].out;
+        validCell[i] <== temp[i] * (1 - bomb);
 
         // Calculate the next cell index
         var x = i % width;
