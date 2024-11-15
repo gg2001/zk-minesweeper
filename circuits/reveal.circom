@@ -162,6 +162,39 @@ template Reveal (width, height, bombs) {
         }
     }
 
+    // Signals
+    signal partialReveal[width * height];
+    signal partialRevealTemp[width * height];
+    // Components
+    component revealEqual[width * height][width * height];
+    // Accumulators
+    signal revealAccumulator[width * height][(width * height) + 1];
+    signal frequencyAccumulator[width * height][(width * height) + 1];
+    for (var i = 0; i < (width * height); i++) {
+        // Get the neighbors for the revealed cells
+        revealAccumulator[i][0] <== 0;
+        frequencyAccumulator[i][0] <== 0;
+        for (var j = 0; j < (width * height); j++) {
+            revealEqual[i][j] = IsEqual();
+            revealEqual[i][j].in[0] <== cell[j];
+            revealEqual[i][j].in[1] <== i;
+            revealAccumulator[i][j+1] <== revealAccumulator[i][j] + (revealEqual[i][j].out * cellNeighbors[j]);
+            frequencyAccumulator[i][j+1] <== frequencyAccumulator[i][j] + revealEqual[i][j].out;
+        }
+
+        // partialReveal[i] = revealAccumulator[i][width * height] / frequencyAccumulator[i][width * height]
+        // Handle division by 0
+        partialRevealTemp[i] <-- frequencyAccumulator[i][width * height] == 0 ? 
+            0 : 
+            revealAccumulator[i][width * height] \ frequencyAccumulator[i][width * height];
+        partialRevealTemp[i] * frequencyAccumulator[i][width * height] === revealAccumulator[i][width * height];
+        partialReveal[i] <== partialRevealTemp[i];
+    }
+
+    for (var i = 0; i < (width * height); i++) {
+        log(i, partialReveal[i]);
+    }
+
     // If the index is a bomb, reveal the entire grid
     var fullReveal[width * height];
     for (var i = 0; i < (width * height); i++) {
