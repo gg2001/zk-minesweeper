@@ -47,6 +47,7 @@ test:
 .PHONY: circuits
 circuits: $(ARTIFACTS_DIR)
 	@for circuit in $(CIRCUITS); do \
+		set -e; \
 		echo "Compiling circuit $$circuit..."; \
 		circom circuits/$$circuit.circom --r1cs --wasm --wat --sym --output $(ARTIFACTS_DIR); \
 		mv $(ARTIFACTS_DIR)/$${circuit}_js/$${circuit}.wasm $(ARTIFACTS_DIR)/ && \
@@ -66,6 +67,7 @@ verifiers: $(PTAU_FILE)
 		if [ ! -f "$(ARTIFACTS_DIR)/$$circuit.r1cs" ]; then \
 			$(MAKE) circuits; \
 		fi; \
+		set -e; \
 		echo "Generating verifier for $$circuit...$$( [ "$(BEACON)" = "$(DEFAULT_BEACON)" ] && echo " (BEACON=$(BEACON))" || echo " (BEACON=RANDOM)" )"; \
 		pnpm snarkjs groth16 setup $(ARTIFACTS_DIR)/$$circuit.r1cs $(PTAU_FILE) $(ARTIFACTS_DIR)/$${circuit}-0000.zkey; \
 		if [ "$(PROD)" = "true" ]; then \
