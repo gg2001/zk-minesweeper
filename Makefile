@@ -41,7 +41,7 @@ format:
 .PHONY: test
 test:
 	@echo "Testing..."
-	@forge test
+	@forge test -vvv
 
 .PHONY: circuits
 circuits: $(ARTIFACTS_DIR)

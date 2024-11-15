@@ -154,4 +154,40 @@ contract MinesweeperTest is Test {
         assertEq(reveal.index, index);
         assertEq(reveal.id, init.id);
     }
+
+    function test_RevealSafe0() public {
+        Grid memory grid = mockGrid();
+        Init memory init = proveInit(grid);
+        minesweeper.init(init.pA, init.pB, init.pC, init.pubSignals);
+
+        uint256 index = 0;
+
+        Reveal memory reveal = proveReveal(grid, init.id, index);
+        minesweeper.reveal(reveal.pA, reveal.pB, reveal.pC, reveal.pubSignals);
+
+        logGrid(grid.cells);
+        logGrid(reveal.grid);
+
+        assertEq(reveal.bomb, 0);
+        assertEq(reveal.index, index);
+        assertEq(reveal.id, init.id);
+    }
+
+    function test_RevealSafe1() public {
+        Grid memory grid = mockGrid();
+        Init memory init = proveInit(grid);
+        minesweeper.init(init.pA, init.pB, init.pC, init.pubSignals);
+
+        uint256 index = 51;
+
+        Reveal memory reveal = proveReveal(grid, init.id, index);
+        minesweeper.reveal(reveal.pA, reveal.pB, reveal.pC, reveal.pubSignals);
+
+        logGrid(grid.cells);
+        logGrid(reveal.grid);
+
+        assertEq(reveal.bomb, 0);
+        assertEq(reveal.index, index);
+        assertEq(reveal.id, init.id);
+    }
 }

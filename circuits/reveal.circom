@@ -199,8 +199,12 @@ template Reveal (width, height, bombs) {
     }
 
     // Output
+    signal bombMask[width * height];
+    signal outMask[width * height];
     for (var i = 0; i < (width * height); i++) {
-        out[i] <== partialReveal[i] + fullReveal[i];
+        bombMask[i] <== 1 - ((1 - bomb) * grid[i]);
+        outMask[i] <== partialReveal[i] * bombMask[i];
+        out[i] <== outMask[i] + fullReveal[i];
     }
 }
 
