@@ -64,17 +64,14 @@ template Reveal (width, height, bombs) {
     }
 
     // Reveal partial neighbor counts
-    signal partialReveal[width * height];
-    signal tempNeighborCount[width * height];
     signal nextCell[width * height];
+    signal cellNeighbors[width * height];
     nextCell[0] <== index;
     component nextCellEqual[width * height][width * height];
-    component neighborCountEqual[width * height][width * height];
+    component neighborCountIsZero[width * height];
     signal neighborCountAccumulator[width * height][(width * height) + 1];
-    signal partialRevealAccumulator[width * height][(width * height) + 1];
     for (var i = 0; i < ((width * height) - 1); i++) {
         neighborCountAccumulator[i][0] <== 0;
-        partialRevealAccumulator[i][0] <== 0;
 
         for (var j = 0; j < (width * height); j++) {
             nextCellEqual[i][j] = IsEqual();
@@ -82,17 +79,12 @@ template Reveal (width, height, bombs) {
             nextCellEqual[i][j].in[1] <== j;
             neighborCountAccumulator[i][j + 1] <== neighborCountAccumulator[i][j] + (nextCellEqual[i][j].out * neighborCounts[j]);
         }
-        tempNeighborCount[i] <== neighborCountAccumulator[i][width * height];
+        cellNeighbors[i] <== neighborCountAccumulator[i][width * height];
 
-        for (var j = 0; j < (width * height); j++) {
-            neighborCountEqual[i][j] = IsEqual();
-            neighborCountEqual[i][j].in[0] <== nextCell[i];
-            neighborCountEqual[i][j].in[1] <== j;
-            partialRevealAccumulator[i][j + 1] <== partialRevealAccumulator[i][j] + (neighborCountEqual[i][j].out * tempNeighborCount[i]);
-        }
-        partialReveal[i] <== partialRevealAccumulator[i][width * height];
+        neighborCountIsZero[i] = IsZero();
+        neighborCountIsZero[i].in <== cellNeighbors[i];
 
-        nextCell[i + 1] <== 1;
+        nextCell[i + 1] <== nextCell[i] + (1 - neighborCountIsZero[i].out);
     }
 
     // If the index is a bomb, reveal the entire grid
