@@ -4,8 +4,10 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 include "./minesweeper.circom";
 
 template Reveal (width, height, bombs) {
+    // Private
     signal input grid[width * height];
     signal input salt;
+    // Public
     signal input id;
     signal input index;
 
@@ -27,7 +29,9 @@ template Reveal (width, height, bombs) {
     indexValid.out === 1;
 
     // Check if the index is a bomb
+    // Components
     component indexEqual[width * height];
+    // Accumulators
     signal bombAccumulator[(width * height) + 1];
     bombAccumulator[0] <== 0;
     for (var i = 0; i < (width * height); i++) {
@@ -39,7 +43,9 @@ template Reveal (width, height, bombs) {
     bomb <== bombAccumulator[width * height];
 
     // Sum the neighbor bomb counts for each cell
+    // Signals
     signal neighborCounts[width * height];
+    // Accumulators
     signal neighborAccumulator[width * height][8 + 1];
     for (var x = 0; x < width; x++) {
         for (var y = 0; y < height; y++) {
@@ -64,15 +70,24 @@ template Reveal (width, height, bombs) {
     }
 
     // Reveal partial neighbor counts
+    // Signals
     signal nextCell[width * height];
     signal cellNeighbors[width * height];
     nextCell[0] <== index;
+    // Components
+    component nextCellPositive[width * height];
     component nextCellEqual[width * height][width * height];
     component neighborCountIsZero[width * height];
+    // Accumulators
     signal neighborCountAccumulator[width * height][(width * height) + 1];
     for (var i = 0; i < ((width * height) - 1); i++) {
-        neighborCountAccumulator[i][0] <== 0;
+        // out = 1 if positive or zero, else 0
+        nextCellPositive[i] = GreaterEqThan(10);
+        nextCellPositive[i].in[0] <== nextCell[i];
+        nextCellPositive[i].in[1] <== 0;
 
+        // cellNeighbors[i] = neighborCounts[nextCell[i]]
+        neighborCountAccumulator[i][0] <== 0;
         for (var j = 0; j < (width * height); j++) {
             nextCellEqual[i][j] = IsEqual();
             nextCellEqual[i][j].in[0] <== nextCell[i];
@@ -81,6 +96,7 @@ template Reveal (width, height, bombs) {
         }
         cellNeighbors[i] <== neighborCountAccumulator[i][width * height];
 
+        // out = 1 if zero, else 0
         neighborCountIsZero[i] = IsZero();
         neighborCountIsZero[i].in <== cellNeighbors[i];
 
