@@ -162,6 +162,7 @@ template Reveal (width, height, bombs) {
         }
     }
 
+    // Get the partial reveal for each cell
     // Signals
     signal partialReveal[width * height];
     signal partialRevealTemp[width * height];
@@ -191,10 +192,6 @@ template Reveal (width, height, bombs) {
         partialReveal[i] <== partialRevealTemp[i];
     }
 
-    for (var i = 0; i < (width * height); i++) {
-        log(i, partialReveal[i]);
-    }
-
     // If the index is a bomb, reveal the entire grid
     var fullReveal[width * height];
     for (var i = 0; i < (width * height); i++) {
@@ -203,7 +200,7 @@ template Reveal (width, height, bombs) {
 
     // Output
     for (var i = 0; i < (width * height); i++) {
-        out[i] <== fullReveal[i];
+        out[i] <== partialReveal[i] + fullReveal[i];
     }
 }
 

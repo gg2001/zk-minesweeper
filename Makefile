@@ -1,6 +1,6 @@
 ARTIFACTS_DIR = artifacts/circom
 
-PTAU_URL := https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_15.ptau
+PTAU_URL := https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_17.ptau
 PTAU_FILE := $(ARTIFACTS_DIR)/pot17_final.ptau
 
 CIRCUITS := init reveal
