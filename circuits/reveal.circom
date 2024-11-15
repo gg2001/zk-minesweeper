@@ -74,15 +74,24 @@ template Reveal (width, height, bombs) {
     // Signals
     signal cell[((width * height) * 9) + 1];
     signal cellNeighbors[width * height];
-    signal temp[width * height];
-    signal validCell[width * height];
+    signal cellValidTemp[width * height];
+    signal cellValid[width * height];
+    signal cellX[width * height];
+    signal cellY[width * height];
+    signal nextCell[width * height][9];
+    signal nextCellTemp0[width * height][9];
+    signal nextCellTemp1[width * height][9];
     cell[0] <== index * ((-2 * bomb) + 1); // If bomb, start at -1, else 0
     // Components
     component cellPositive[width * height];
     component cellEqual[width * height][width * height];
     component neighborCountIsZero[width * height];
+    component nextCellGte[width * height][9];
+    component nextCellLt[width * height][9];
     // Accumulators
     signal neighborCountAccumulator[width * height][(width * height) + 1];
+    signal cellXAccumulator[width * height][(width * height) + 1];
+    signal cellYAccumulator[width * height][(width * height) + 1];
     // Variables
     var cellIndex = 0;
     for (var i = 0; i < (width * height); i++) {
@@ -92,14 +101,22 @@ template Reveal (width, height, bombs) {
         cellPositive[i].in[1] <== 0;
 
         // cellNeighbors[i] = neighborCounts[cell[i]]
+        // cellX[i] = cell[i] % width
+        // cellY[i] = cell[i] / width
         neighborCountAccumulator[i][0] <== 0;
+        cellXAccumulator[i][0] <== 0;
+        cellYAccumulator[i][0] <== 0;
         for (var j = 0; j < (width * height); j++) {
             cellEqual[i][j] = IsEqual();
             cellEqual[i][j].in[0] <== cell[i];
             cellEqual[i][j].in[1] <== j;
             neighborCountAccumulator[i][j+1] <== neighborCountAccumulator[i][j] + (cellEqual[i][j].out * neighborCounts[j]);
+            cellXAccumulator[i][j+1] <== cellXAccumulator[i][j] + (cellEqual[i][j].out * (j % width));
+            cellYAccumulator[i][j+1] <== cellYAccumulator[i][j] + (cellEqual[i][j].out * (j / width));
         }
         cellNeighbors[i] <== neighborCountAccumulator[i][width * height];
+        cellX[i] <== cellXAccumulator[i][width * height];
+        cellY[i] <== cellYAccumulator[i][width * height];
 
         log(cell[i], cellNeighbors[i]);
 
@@ -107,19 +124,39 @@ template Reveal (width, height, bombs) {
         neighborCountIsZero[i] = IsZero();
         neighborCountIsZero[i].in <== cellNeighbors[i];
 
-        // validCell[i] = 1 if (cellPositive[i].out == 0 || neighborCountIsZero[i].out == 0 || bomb == 1), else 0
-        temp[i] <== cellPositive[i].out * neighborCountIsZero[i].out;
-        validCell[i] <== temp[i] * (1 - bomb);
+        // cellValid[i] = 1 if (cellPositive[i].out == 1 && neighborCountIsZero[i].out == 1 && bomb == 0), else 0
+        cellValidTemp[i] <== cellPositive[i].out * neighborCountIsZero[i].out;
+        cellValid[i] <== cellValidTemp[i] * (1 - bomb);
 
         // Calculate the next cell index
-        var x = i % width;
-        var y = i / width;
+        var j = 0;
         for (var dy = -1; dy <= 1; dy++) {
             for (var dx = -1; dx <= 1; dx++) {
-                var nextCell = ((y + dy) * width) + (x + dx);
+                if (dx != 0 || dy != 0) {
+                    // The next cell index
+                    nextCell[i][j] <== ((cellY[i] + dy) * width) + (cellX[i] + dx);
 
-                cell[cellIndex+1] <== validCell[i] * (nextCell >= 0 && nextCell < (width * height) ? nextCell : -1) + (1 - validCell[i]) * (-1);
-                cellIndex++;
+                    // nextCellTemp0[i][j] = 1 if nextCell[i][j] >= 0 && nextCell[i][j] < (width * height), else 0
+                    nextCellGte[i][j] = GreaterEqThan(10);
+                    nextCellGte[i][j].in[0] <== nextCell[i][j];
+                    nextCellGte[i][j].in[1] <== 0;
+
+                    nextCellLt[i][j] = LessThan(10);
+                    nextCellLt[i][j].in[0] <== nextCell[i][j];
+                    nextCellLt[i][j].in[1] <== width * height;
+
+                    nextCellTemp0[i][j] <== nextCellGte[i][j].out * nextCellLt[i][j].out;
+
+                    // nextCellTemp1[i][j] = nextCell[i][j] if nextCellTemp0[i][j] == 1, else -1
+                    nextCellTemp1[i][j] <== nextCellTemp0[i][j] * nextCell[i][j] + (1 - nextCellTemp0[i][j]) * (-1);
+
+                    // cell[cellIndex+1] = nextCellTemp1[i][j] if cellValid[i] == 1, else -1
+                    cell[cellIndex+1] <== cellValid[i] * nextCellTemp1[i][j] + (1 - cellValid[i]) * (-1);
+
+                    // Increment indices
+                    cellIndex++;
+                    j++;
+                }
             }
         }
     }
